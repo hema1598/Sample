@@ -8,7 +8,7 @@ class form extends CI_Controller
         $this->load->database();
         $this->load->model('form_model');
         $this->load->library('form_validation');
-        $this->load->library('upload');s
+        $this->load->library('upload');
     }
 
 
