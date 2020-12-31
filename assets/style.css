@@ -1,0 +1,88 @@
+body{  
+    font-family: Calibri, Helvetica, sans-serif;  
+  }  
+  .inputfile:focus + label {
+    outline: 1px dotted #000;
+    outline: -webkit-focus-ring-color auto 5px;
+  }
+ 
+  .container {  
+    padding: 40px;  
+    background-color: lightblue;  
+    width:100%;
+    max-width:800px
+  }  
+    
+  input[type=text], input[type=password],
+  input[type=email], input[type=tel], textarea {  
+    width: 100%;  
+    padding: 15px;  
+    margin: 5px 0 22px 0;  
+    display: inline-block;  
+    border: none;  
+    background: #f1f1f1;  
+  }  
+  input[type=text]:focus, input[type=password]:focus,
+  input[type=email]:focus, input[type=tel]:focus,
+  input[type=file]:focus {  
+    outline:#000;  
+  }  
+  div{  
+  padding: 10px 0;  
+  }
+  .pdf_l{
+    font-weight:400;
+  }
+  hr{  
+    border: 1px solid #f1f1f1;  
+    margin-bottom: 25px;  
+  }  
+  .registerbtn {  
+    background-color: #898989;  
+    color: #fff;  
+    padding: 16px 20px;  
+    margin: 18px 0;  
+    border: none;  
+    cursor: pointer;  
+    width: 250px;  
+    opacity: 0.9;  
+  
+  }  
+  .registerbtn:hover {  
+    background-color: #fff; 
+    color: #000;  
+    border: 1px solid #fff;
+  } 
+  .address_align div, .image_align div{
+    width:50%;
+  }
+  .address_align{
+    display:flex;
+    padding:0px;
+  }
+  .image_align{
+    display:flex;
+    padding:15px 0px;
+  }
+  .city-wrap{
+    padding-right: 20px;
+  }
+  #register_form{
+  display: grid;
+  justify-content: center; 
+  }
+  div label{
+    font-weight: 700;
+  }
+  .d_align{
+   padding:25px 0px !important;
+  }
+  .d_phone{
+    padding-top:20px;
+  }
+  .registerbtn{
+    margin-top:30px;
+  }
+  #image_id img{
+    vertical-align:middle;
+  }
