@@ -12,15 +12,6 @@ class form extends CI_Controller
     }
 
 
-    public function search_with_number(){
-        $c_mobileno=$this->input->post('c_mobileno_search');
-        $got_customer_info['search_customer_info']=$this->Customer_model->get_customer_info($c_mobileno);
-        $got_customer_info['get_country']=$this->Customer_model->get_country();// all country name
-        $this->load->view('customer/search_order',$got_customer_info);
-      }
-
-
-
     public function savedata(){
         $this->load->view('form_view');
         if ($this->input->post('save'))
