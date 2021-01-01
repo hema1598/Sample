@@ -2,15 +2,13 @@
 class form extends CI_Controller
 {
 
-    public function __construct()
-    {
+    public function __construct(){
         parent::__construct();
         $this->load->database();
         $this->load->model('form_model');
         $this->load->library('form_validation');
         $this->load->library('upload');
     }
-
 
     public function savedata(){
         $this->load->view('form_view');
