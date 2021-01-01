@@ -104,8 +104,6 @@ class form extends CI_Controller
     
     }
 
-
-
     public function createTable(){
 
         if( $this->db->table_exists('register') == FALSE ){
