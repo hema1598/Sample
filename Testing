@@ -1,0 +1,545 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class Users extends CO_Controller{
+    function __construct(){
+        parent:: __construct();
+        $this->load->model('usermodel', 'um');
+        $this->load->helper(array('layout_helper','form'));
+        $this->load->library('form_validation');
+        $this->load->library('upload');
+    }
+
+    // public function delete() {
+    //     $json = array();
+    //     $uID = $this->input->post('id');        
+    //     $this->um->setUid($uID);
+    //     $this->um->deleteUser();
+    //     $this->output->set_header('Content-Type: application/json');
+    //     echo json_encode($json);        
+    // }
+
+        public function delete() {
+            $id = $this->input->post('id');
+            $res = $this->um->selectuser($id);
+            print_r($res);
+            if($res){
+                      $res = reset($res);
+                      if(file_exists($res->profilePicpath))
+                      unlink($res->profilePicpath);
+                    //   if(file_exists($res->pdffile))
+                    //   unlink($res->pdffile);
+                      $this->um->deleterec($id);
+              }
+            else{
+                echo "something wrong";
+            }
+        }
+
+    function index(){
+        // $this->load->view('layout/header');
+        // $this->load->view('layout/sidenav');		
+        // $this->load->view('user/login'); // , $data
+        $this->load->view('user/login_form'); // , $data
+        // $this->load->view('layout/footer');
+    }
+
+    // Register View
+    function register(){
+        try{
+            $this->data['states'] = $this->db->get("tbl_mstate")->result();
+            $this->data['nadalumandram'] = $this->db->get("tbl_mnadalumandram")->result();
+            $this->data['sattamandram'] = $this->db->get("tbl_msattamandram")->result();
+            $this->data['dftype'] = $this->db->get("tbl_mdftype")->result();   
+
+        // $this->load->view('user/registeration', $data); // array('states' => $states )
+
+        $this->data['title'] = "User | Listing";
+        $this->page ="user/registeration"; 
+        $this->backend();
+        }
+        catch (Exception $e) {
+            echo $e->getMessage();
+        }
+    }
+
+    public function editdata(){
+        $id=$this->input->get('id');
+        $this->data['states'] = $this->db->get("tbl_mstate")->result();
+        $this->data['nadalumandram'] = $this->db->get("tbl_mnadalumandram")->result();
+        $this->data['sattamandram'] = $this->db->get("tbl_msattamandram")->result();
+        $this->data['dftype'] = $this->db->get("tbl_mdftype")->result();  
+
+        $this->data["userdata"]=$this->um->displayrecordsById($id, 'register','id');
+        // $this->data["userdetdata"]=$this->um->displayrecordsById($id, 'register_det','parentid');
+        $this->data['title'] = "User | Update";
+        $this->page ="user/registeration";
+        $this->backend();
+        }
+
+    // Fetch another DROP DOWN on select based on country, state, city   
+    function fetch_dropdown()
+    {
+        if($this->input->post('id'))
+        {
+                $model=$this->input->post('model');
+            echo $this->um->$model( $id=$this->input->post('id'));               
+        }
+    }   
+  
+    // SAVE NEW RECORD
+    public function savedataajax()
+    {
+        try{
+                    if($_FILES['profilePicpath']['error'] > 0 ){
+                        $ip = $this->input->post('proimg');
+                    }
+        
+                else{  
+                    if(isset($_FILES["profilePicpath"]) && !empty($_FILES["profilePicpath"] > 0)){
+                        $ext = pathinfo($_FILES['profilePicpath']['name'], PATHINFO_EXTENSION);
+                        $filename = "uploads/photos/".time().'.'.$ext;
+                        move_uploaded_file($_FILES["profilePicpath"]["tmp_name"], $filename);
+                        $profilePicpath = $filename;  
+                        $flagprofilePicpath = true; 
+                }
+                }
+
+                if($_FILES['profilePic']['error'] > 0){
+                    $profilePic = addslashes(file_get_contents($this->input->post('profileimg')));
+                }
+                else{
+                    if(count($_FILES) > 0) {
+                        if(isset($_FILES["profilePic"]) && !empty($_FILES["profilePic"]) ){
+                            $profilePic = addslashes(file_get_contents($_FILES["profilePic"]['tmp_name']));
+                        }
+                    }
+                }
+       
+         
+                    //Address
+                    $sameadd=$this->input->post('filladdress');
+                    if ($sameadd==true){
+                        $ttstreet_addres=$this->input->post('tpstreet_addres');
+                        $ttstreet_landmark=$this->input->post('tpstreet_landmark');
+                        $ttvartno=$this->input->post('tpvartno');
+                        $ttvillage=$this->input->post('tpvillage');
+                        $ttpost=$this->input->post('tppost');
+
+                        $temptamiltaluk=$this->input->post('pertamiltaluk');
+                        $temptamildistrict=$this->input->post('pertamildistrict');
+                        $temptamilstate=$this->input->post('pertamilstate');
+                        $temptamilzip=$this->input->post('pertamilzip');           
+
+                        $etstreet_addres=$this->input->post('epstreet_addres');
+                        $etaddress_landmark=$this->input->post('epstreet_landmark');
+                        $etvartno=$this->input->post('epvartno');
+                        $etvillage=$this->input->post('epvillage');
+                        $etpost=$this->input->post('eppost');
+
+                        $tempengtaluk=$this->input->post('perengtaluk');
+                        $tempengdistrict=$this->input->post('perengdistrict');
+                        $tempengstate=$this->input->post('perengstate');
+                        $tempengzip=$this->input->post('perengzip');   
+                    }
+                    else{
+                        $ttstreet_addres=$this->input->post('ttstreet_addres');
+                        $ttstreet_landmark=$this->input->post('ttstreet_landmark');
+                        $ttvartno=$this->input->post('ttvartno');
+                        $ttvillage=$this->input->post('ttvillage');
+                        $ttpost=$this->input->post('ttpost');
+
+                        $temptamiltaluk=$this->input->post('temptamiltaluk');
+                        $temptamildistrict=$this->input->post('temptamildistrict');
+                        $temptamilstate=$this->input->post('temptamilstate');
+                        $temptamilzip=$this->input->post('temptamilzip'); 
+
+                        $etstreet_addres=$this->input->post('etstreet_addres');
+                        $etaddress_landmark=$this->input->post('etaddress_landmark');
+                        $etvartno=$this->input->post('etvartno');
+                        $etvillage=$this->input->post('etvillage');
+                        $etpost=$this->input->post('etpost');
+
+                        $tempengtaluk=$this->input->post('tempengtaluk');
+                        $tempengdistrict=$this->input->post('tempengdistrict');
+                        $tempengstate=$this->input->post('tempengstate');
+                        $tempengzip=$this->input->post('tempengzip'); 
+                    }
+                
+                    $id=$this->input->post('id') ? $this->input->post('id') : ""; //$this->input->post('id');
+                    echo "$id",$id;
+
+            if($this->input->is_ajax_request()){
+                if($this->input->server('REQUEST_METHOD') == 'POST') {
+                      $this->form_validation->set_rules("efirstname", 'efirstname', 'trim|required|alpha_numeric_spaces');
+                      $this->form_validation->set_rules("phone", 'phone', 'trim|required|exact_length[10]');
+                      $this->form_validation->set_rules("aadhar", 'aadhar', 'trim|required|exact_length[12]');
+
+                    if($this->form_validation->run() != FALSE ) {  
+                                $data = array(
+                                "efirstname"=>$this->input->post('efirstname'),
+                                "elastname"=>$this->input->post('elastname'),
+                                "tfirstname"=>$this->input->post('tfirstname'),
+                                "tlastname"=>$this->input->post('tlastname'),
+
+                                "dob"=>$this->input->post('dob'),
+                                "age"=>$this->input->post('age'),
+                                "email"=>$this->input->post('email'),
+                                "gender"=>$this->input->post('gender'),
+                                "phone"=>$this->input->post('phone'),
+                                "phone2"=>$this->input->post('phone2'),
+
+                                "profilePic"=>  $profilePic,    //$this->input->post('profilePicpath'),
+                                "profilePicpath"=>$profilePicpath,
+                                "pdffile"=>$this->input->post('pdffile'),
+
+                                "gardiantype"=>$this->input->post('gardiantype'),
+                                "gardianname"=>$this->input->post('gardianname'),
+                                "egardianname"=>$this->input->post('egardianname'),
+                                "gardiancontact1"=>$this->input->post('gardiancontact1'),
+                                "gardiancontact2"=>$this->input->post('gardiancontact2'),
+
+                                "maritalstatus"=>$this->input->post('maritalstatus'),
+
+                                "religion"=>$this->input->post('religion'),
+                                "caste"=>$this->input->post('caste'),
+                                "edu"=>$this->input->post('edu'),
+                                "business"=>$this->input->post('business'),
+
+                                "tpstreet_addres"=>$this->input->post('tpstreet_addres'),
+                                "tpstreet_landmark"=>$this->input->post('tpstreet_landmark'),
+                                "tpvartno"=>$this->input->post('tpvartno'),
+                                "tpvillage"=>$this->input->post('tpvillage'),
+                                "tppost"=>$this->input->post('tppost'),
+
+                                "pertamiltaluk"=>$this->input->post('pertamiltaluk'),
+                                "pertamildistrict"=>$this->input->post('pertamildistrict'),
+                                "pertamilstate"=>$this->input->post('pertamilstate'),
+                                "pertamilzip"=>$this->input->post('pertamilzip'),           
+
+                                "epstreet_addres"=>$this->input->post('epstreet_addres'),
+                                "epstreet_landmark"=>$this->input->post('epstreet_landmark'),
+                                "epvartno"=>$this->input->post('epvartno'),
+                                "epvillage"=>$this->input->post('epvillage'),
+                                "eppost"=>$this->input->post('eppost'),
+
+                                "perengtaluk"=>$this->input->post('perengtaluk'),
+                                "perengdistrict"=>$this->input->post('perengdistrict'),
+                                "perengstate"=>$this->input->post('perengstate'),
+                                "perengzip"=>$this->input->post('perengzip'),   
+
+                                // "ttstreet_addres"=>$this->input->post('ttstreet_addres'),
+                                // "ttstreet_landmark"=>$this->input->post('ttstreet_landmark'),
+                                // "ttvartno"=>$this->input->post('ttvartno'),
+                                // "ttvillage"=>$this->input->post('ttvillage'),
+                                // "ttpost"=>$this->input->post('ttpost'),
+
+                                // "temptamiltaluk"=>$this->input->post('temptamiltaluk'),
+                                // "temptamildistrict"=>$this->input->post('temptamildistrict'),
+                                // "temptamilstate"=>$this->input->post('temptamilstate'),
+                                // "temptamilzip"=>$this->input->post('temptamilzip'), 
+
+                                // "etstreet_addres"=>$this->input->post('etstreet_addres'),
+                                // "etaddress_landmark"=>$this->input->post('etaddress_landmark'),
+                                // "etvartno"=>$this->input->post('etvartno'),
+                                // "etvillage"=>$this->input->post('etvillage'),
+                                // "etpost"=>$this->input->post('etpost'),
+
+                                // "tempengtaluk"=>$this->input->post('tempengtaluk'),
+                                // "tempengdistrict"=>$this->input->post('tempengdistrict'),
+                                // "tempengstate"=>$this->input->post('tempengstate'),
+                                // "tempengzip"=>$this->input->post('tempengzip'), 
+
+                                "ttstreet_addres"=>$ttstreet_addres,
+                                "ttstreet_landmark"=>$ttstreet_landmark,
+                                "ttvartno"=>$ttvartno,
+                                "ttvillage"=>$ttvillage,
+                                "ttpost"=>$ttpost,
+
+                                "temptamiltaluk"=>$temptamiltaluk,
+                                "temptamildistrict"=>$temptamildistrict,
+                                "temptamilstate"=>$temptamilstate,
+                                "temptamilzip"=>$temptamilzip, 
+
+                                "etstreet_addres"=>$etstreet_addres,
+                                "etaddress_landmark"=>$etaddress_landmark,
+                                "etvartno"=>$etvartno,
+                                "etvillage"=>$etvillage,
+                                "etpost"=>$etpost,
+
+                                "tempengtaluk"=>$tempengtaluk,
+                                "tempengdistrict"=>$tempengdistrict,
+                                "tempengstate"=>$tempengstate,
+                                "tempengzip"=>$tempengzip, 
+                    
+                                "udidno"=>$this->input->post('udidno'),
+                                "nalavariyano"=>$this->input->post('nalavariyano'),
+                                "familycard"=>$this->input->post('familycard'),
+                                "aadhar"=>$this->input->post('aadhar'),
+                                "voterid"=>$this->input->post('voterid'),
+                                "empregno"=>$this->input->post('empregno'),
+                                "empregdate"=>$this->input->post('empregdate'),
+
+                                "sattamandram"=>$this->input->post('sattamandram'),
+                                "nadalumandram"=>$this->input->post('nadalumandram'),
+                                "dftype"=>$this->input->post('dftype'),
+                                "dftype1"=>$this->input->post('dftype1'),
+                                "dftype2"=>$this->input->post('dftype2'),
+
+                                "dfvehicleusage"=>$this->input->post('dfvehicleusage'),
+                                "dfvehicleusage1"=>$this->input->post('dfvehicleusage1'),
+                                "dfsupportmatrialusing"=>$this->input->post('dfsupportmatrialusing'),
+                                "dfsupportmatrialusing1"=>$this->input->post('dfsupportmatrialusing1'),
+                                "dfhappendby"=>$this->input->post('dfhappendby'),
+                                "dfpercentage"=>$this->input->post('dfpercentage'),
+                                "walkingwithoutsupportmaterial"=>$this->input->post('walkingwithoutsupportmaterial'),
+                                "havingmembership"=>$this->input->post('havingmembership'),
+
+                                "membershipnumber"=>$this->input->post('membershipnumber'),
+                                "membershipdate"=>$this->input->post('membershipdate'),
+                                "membershipfeespaid"=>$this->input->post('membershipfeespaid'),
+                                "membershipreceiptno"=>$this->input->post('membershipreceiptno'),
+                                "membershipreceiptdate"=>$this->input->post('membershipreceiptdate'),
+                                "helpfromtrust"=>$this->input->post('helpfromtrustdata'),
+                                "otherhelpfromtrust"=>$this->input->post('otherhelpfromtrust'),
+                                "otherhelpfromtrusteng" =>$this->input->post('otherhelpfromtrusteng'),
+
+                                "hobbies"=>$this->input->post('hobbiesdata'),
+                                "ipaddress" => $this->input->ip_address(),    
+                                'createddate'=>date('Y-m-d H:i:s'),
+                                'active'=>1,
+                                'detdata'=>$this->input->post('detdata'),            
+                                );
+
+                        // $detdata = json_decode($_POST['detdata']);
+                        //  $detdata = $this->input->post('detdata');
+                        // echo "tempArr CO <pre>";
+                        // var_dump($detdata);  
+                
+                        if($id && $this->input->post('type')==2){
+                        //print_r($data); 
+                        $res = $this->um->selectuser($id);
+                            if($res){
+                                $res = reset($res);
+                                if(file_exists($res->profilePicpath) &&  $flagprofilePicpath)
+                                unlink($res->profilePicpath);
+                                // if(file_exists($res->pdffile) &&  $flagpdffile)
+                                // unlink($res->pdffile);
+                            $result['tes'] = $this->um->update_records($id,$data);
+                            }
+                            // echo "Data updated successfully !";
+                            if(isset($result) && !empty($result)){
+                                echo json_encode(array(
+                                  "message" => "Data updated Successfully",
+                                  "status" => "success",
+                                  "code"=> 200,
+                                  "link"=> "",
+                                  "data"=> $result
+                              ));
+                              $data['message'] = $this->session->flashdata('message');
+                            }
+                            else{
+                              echo json_encode(array(
+                                  "message" => "Oops! something went wrong. System cannot update user information.",
+                                  "status" => "error",
+                                  "code"=> 200,
+                                  "link"=> "",
+                                  "data"=> $result
+                              ));
+                            }
+                        }
+                        else{
+                            //print_r($data);  
+                            $result['data'] = $this->um->saverec($data);    
+                            // echo"Record Saved";
+                            if(isset($result) && !empty($result)){
+                                echo json_encode(array(
+                                  "message" => "Data Saved Successfully",
+                                  "status" => "success",
+                                  "code"=> 200,
+                                  "link"=> "",
+                                  "data"=> $result
+                              ));
+                            }
+                            else{
+                              echo json_encode(array(
+                                  "message" => "Oops! something went wrong. System cannot insert user information.",
+                                  "status" => "error",
+                                  "code"=> 200,
+                                  "link"=> "",
+                                  "data"=> $result
+                              ));
+                            }
+                        }
+                            // echo json_encode(array(
+                            //     "statusCode"=>200
+                            // ));
+                    }
+                    else{
+                    $this->output->set_header('HTTP/1.1 405 Method Not Allowed');
+                    echo json_encode(array(
+                        "message" => validation_errors(),
+                        "status" => "error",
+                        "code"=> 405,
+                        "link"=> "",
+                    ));
+                    }
+
+                }
+            }
+            else{
+                exit('No direct access allowed');
+            }
+        }
+        catch (Exception $e) {
+            echo $e->getMessage();
+        }         
+ 
+        // redirect("users/dashboard");          
+    }
+ 
+    //DASHBOARD
+	public function dashboard(){
+        try{
+            $this->data['states'] = $this->db->get("tbl_mstate")->result();
+            $this->data['nadalumandram'] = $this->db->get("tbl_mnadalumandram")->result();
+            $this->data['sattamandram'] = $this->db->get("tbl_msattamandram")->result();
+            $this->data['dftype'] = $this->db->get("tbl_mdftype")->result();   
+    
+            // $this->load->view('user/registeration', $data); // array('states' => $states )
+    
+            $this->data['title'] = "User | Dashboard";
+            $this->page ="user/dashboard"; 
+            $this->backend();
+            }
+            catch (Exception $e) {
+                echo $e->getMessage();
+            }
+	}	
+    
+    // GET ALL USERS FOR TABLE
+    public function getAllUsers()
+    {
+        $json = array();    
+       
+        $list = $this->um->getUserData();
+        $data = array();
+        $path=base_url('');
+        foreach ($list as $element) {
+            $row = array();
+            $row[] = $element['id'];
+            $row[] = $element['fullname'];
+            $row[] = $element['email'];
+            $row[] = $element['phone'];
+            $row[] = $element['aadhar'];
+            $row[] = $element['udidno'];
+            $row[] = '<img src="'.$path.$element['profilePicpath'].'"     width= 85px />' ;            
+            $data[] = $row;
+        }
+        $json['data'] = array(
+            "draw" => $_POST['draw'],
+            "recordsTotal" => $this->um->countAll(),
+            "recordsFiltered" => $this->um->countFiltered(),
+            "data" => $data,
+        );
+        //output to json format
+        $this->output->set_header('Content-Type: application/json');
+        echo json_encode($json['data']);
+    }
+
+    // Login
+    
+  public function signup() {
+	// Check validation for user input in SignUp form
+	$this->form_validation->set_rules('username', 'Username', 'trim|required');
+	$this->form_validation->set_rules('email_value', 'Email', 'trim|required');
+	$this->form_validation->set_rules('password', 'Password', 'trim|required');
+    $this->form_validation->set_rules('userrole_id', 'User Role', 'trim|required');
+	if ($this->form_validation->run() == FALSE) {
+	$this->load->view('user/signup_form');
+	} else {
+	$data = array(
+	'user_name' => $this->input->post('username'),
+	'user_email' => $this->input->post('email_value'),
+	'user_password' => $this->input->post('password'),
+    'userrole_id' => $this->input->post('userrole_id')
+	);
+	$result = $this->um->registration_insert($data);
+	if ($result == TRUE) {
+	$data['message_display'] = 'Registration Successfully !';
+	$this->load->view('user/login_form', $data);
+	} else {
+	$data['message_display'] = 'Username already exist!';
+	$this->load->view('user/signup_form', $data);
+	}
+	}
+	}
+	
+	// Check for user login process
+	public function userlogin() {
+	
+	$this->form_validation->set_rules('username', 'Username', 'trim|required');
+	$this->form_validation->set_rules('password', 'Password', 'trim|required');
+	
+	if ($this->form_validation->run() == FALSE) {
+	if(isset($this->session->userdata['logged_in'])){
+    redirect('users/dashboard');
+	}
+    else
+    {
+    redirect('users/dashboard');
+	}
+	} 
+    else {
+	$data = array(
+	'username' => $this->input->post('username'),
+	'password' => $this->input->post('password')
+	);
+	$result = $this->um->login($data);
+	if ($result == TRUE) {
+	$username = $this->input->post('username');
+	$result = $this->um->read_user_information($username);
+	if ($result != false) {
+	$session_data = array(
+	'username' => $result[0]->user_name,
+	'email' => $result[0]->user_email,
+	'userid' => $result[0]->id,
+    'userrole_id' => $result[0]->userrole_id,
+	);
+
+	// Add user data in session
+	$this->session->set_userdata('logged_in', $session_data);
+    redirect('users/dashboard');
+	}
+	} else {
+	$data = array(
+	'error_message' => 'Invalid Username or Password'
+	);
+	$this->load->view('/user/login_form', $data);
+	}
+	}
+	}
+	
+	// Logout from admin page
+	public function logout() {
+	$sess_array = array(
+	'username' => ''
+	);
+	$this->session->unset_userdata('logged_in', $sess_array);
+	$data['message_display'] = 'Successfully Logout';
+	$this->load->view('/user/login_form', $data);
+	}
+
+    public function usertable(){
+        if( $this->db->table_exists('user_login') == FALSE ){
+            $query = "CREATE TABLE user_login(
+                    id int AUTO_INCREMENT PRIMARY KEY,
+                    user_name varchar(50) NOT NULL,
+                    user_email varchar(100) NOT NULL,
+                    user_password varchar(50) NOT NULL,
+                    userrole_id int(11) NOT NULL
+            )ENGINE = InnoDB;";      
+            $this->db->query($query);
+        }
+    }
+}
