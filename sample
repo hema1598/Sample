@@ -1,0 +1,164 @@
+<?php
+class form extends CI_Controller{
+        
+        public function __construct(){
+            parent::__construct();
+            $this->load->database();
+            $this->load->model('form_model');
+            $this->load->library('form_validation');
+            $this->load->library('upload');
+        }
+
+        public function savedata(){
+                $this->load->view('form_view');
+                if ($this->input->post('save')){
+                $f=$this->input->post('firstname');
+                $l=$this->input->post('lastname');
+                $sa=$this->input->post('street_addres');
+                $sad=$this->input->post('street_add');
+                $c=$this->input->post('city');
+                $st=$this->input->post('state_name');
+                $z=$this->input->post('zip');
+                $d=$this->input->post('dob');
+                $g=$this->input->post('gender');
+                $h=$this->input->post('hobbies');
+                $ph=$this->input->post('phone');
+                $e=$this->input->post('email');
+                $flagimgpro = false; 
+                $flagpdffile = false; 
+                
+                if(empty($h)){
+                    echo("<p>You didn't select any any hobby.</p>\n");
+                } 
+                else{
+                    $N = count($h);
+                    echo("<p>You selected $N hobbies(s): ");
+                    for($i=0; $i < $N; $i++){
+                        if($i==0)
+                            $var1 = $h[$i];
+                        else
+                            $var1 = $var1.'&'.$h[$i];
+                    }  
+                }
+                
+                $registerid=$this->input->post('registerid');
+                     
+                if($_FILES['imgpro']['error'] > 0 ){
+                        $ip = $this->input->post('proimg');
+                    
+                }
+                
+                else{  
+                    
+                    if(isset($_FILES["imgpro"]) && !empty($_FILES["imgpro"] > 0)){
+
+                        $ext = pathinfo($_FILES['imgpro']['name'], PATHINFO_EXTENSION);
+                        $filename = "upload/".time().'.'.$ext;
+                        move_uploaded_file($_FILES["imgpro"]["tmp_name"], $filename);
+                        $ip = $filename;  
+                        $flagimgpro = true; 
+                }
+             }
+
+                if($_FILES['profilePic']['error'] > 0){
+                    $pp = addslashes(file_get_contents($this->input->post('profileimg')));
+                }else{
+                    if(count($_FILES) > 0) {
+                        if(isset($_FILES["profilePic"]) && !empty($_FILES["profilePic"]) ){
+                            $pp = addslashes(file_get_contents($_FILES["profilePic"]['tmp_name']));
+                        }
+                    }
+                }
+            
+                if($_FILES['pdffile']['error'] > 0 ){
+                    $pf=$this->input->post('pdf_at');
+                }
+                else{
+                    $registerid=$this->input->post('registerid');
+                    if(isset($_FILES["pdffile"]) && !empty($_FILES["pdffile"]) > 0){
+                        $ext = pathinfo($_FILES['pdffile']['name'], PATHINFO_EXTENSION);
+                        $pdffile = "upload/".time().'.'.$ext;
+                        move_uploaded_file($_FILES["pdffile"]["tmp_name"],$pdffile);
+                        $pf=$pdffile;
+                        $flagpdffile = true; 
+                        }
+                }
+
+            
+                $registerid=$this->input->post('registerid');
+                if($registerid){
+
+                    $res = $this->form_model->displayrecordsById($registerid);
+                    if($res){
+                        $res = reset($res);
+                        if(file_exists($res->imgpro) &&  $flagimgpro)
+                        unlink($res->imgpro);
+                        if(file_exists($res->pdffile) &&  $flagpdffile)
+                        unlink($res->pdffile);
+                        $this->form_model->update_records($f,$l,$sa,$sad,$c,$st,$z,$d,$g,$var1,$ph,$e,$ip,$pp,$pf,$registerid);
+                    }
+                    
+                    echo "Data updated successfully !";
+                }
+                else{
+                    $this->form_model->saverec($f,$l,$sa,$sad,$c,$st,$z,$d,$g,$var1,$ph,$e,$ip,$pp,$pf);
+                    echo"Record Saved";
+                }
+                redirect("/form/displaydata");
+            }
+        }
+    
+        public function displaydata(){
+            $result['data']=$this->form_model->disrecords();
+            $this->load->view('form_records', $result);
+        }
+
+        public function updatedata(){
+            $id=$this->input->get('id');
+            $result['data']=$this->form_model->displayrecordsById($id);
+            // var_dump($result['data']);
+            $this->data["userdata"] = $result['data'];
+            $this->load->view('form_view',$this->data);	
+            
+        }
+    
+        public function deldata(){
+            $id=$this->input->get('id');
+            $res = $this->form_model->displayrecordsById($id);
+            if($res){
+                $res = reset($res);
+                if(file_exists($res->imgpro))
+                unlink($res->imgpro);
+                if(file_exists($res->pdffile))
+                unlink($res->pdffile);
+                $this->form_model->deleterec($id);
+            }
+            redirect("/form/displaydata");
+        }
+
+        public function createTable(){
+            if( $this->db->table_exists('register') == FALSE ){
+                $query = "CREATE TABLE register(
+                        id int AUTO_INCREMENT PRIMARY KEY,
+                        firstname char(30) NOT NULL,
+                        lastname char(10) NOT NULL,
+                        street_addres varchar(50) NOT NULL,
+                        street_add varchar(50) NOT NULL,
+                        city varchar(20) NOT NULL,
+                        state_name varchar(50) NOT NULL,
+                        zip  varchar(10) NOT NULL,
+                        dob date NOT NULL,
+                        gender enum('Male','Female','Others') NOT NULL,
+                        hobbies varchar(50) NOT NULL,
+                        phone bigint(10) NOT NULL,
+                        email varchar(30) NOT NULL,
+                        imgpro varchar(255) NOT NULL,
+                        profilePic longblob NOT NULL,
+                        pdffile varchar(50) NOT NULL
+                )ENGINE = InnoDB;";      
+                $this->db->query($query);
+            }
+        }
+
+}
+
